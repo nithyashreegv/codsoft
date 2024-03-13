@@ -1,0 +1,72 @@
+class ContentBasedRecommender:
+    def __init__(self, items):
+        self.items = items
+        self.item_profiles = {}
+
+    def add_item_profile(self, item_id, features):
+        """
+        Add item profile to the recommender.
+
+        Parameters:
+        - item_id: Unique identifier for the item.
+        - features: Dictionary containing features of the item.
+        """
+        self.item_profiles[item_id] = features
+
+    def recommend_items(self, user_profile, top_n=5):
+        """
+        Recommend top N items to the user based on their profile.
+
+        Parameters:
+        - user_profile: Dictionary containing features of the user.
+        - top_n: Number of items to recommend (default is 5).
+        """
+        # Calculate similarity scores between user profile and item profiles
+        scores = {item_id: self.calculate_similarity(user_profile, item_profile)
+                  for item_id, item_profile in self.item_profiles.items()}
+
+        # Sort items by similarity score in descending order
+        sorted_items = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+
+        # Return top N recommended items
+        return sorted_items[:top_n]
+
+    def calculate_similarity(self, profile1, profile2):
+        """
+        Calculate similarity between two item profiles.
+
+        Parameters:
+        - profile1: Dictionary containing features of the first item.
+        - profile2: Dictionary containing features of the second item.
+        """
+        # This is a simple example; you might use more sophisticated similarity metrics in real scenarios
+        common_features = set(profile1.keys()) & set(profile2.keys())
+
+        # Calculate similarity based on feature types
+        numeric_similarity = sum((profile1[feature] - profile2[feature])**2 for feature in common_features if isinstance(profile1[feature], (int, float)))
+        string_similarity = sum(1 for feature in common_features if isinstance(profile1[feature], str) and profile1[feature] == profile2[feature])
+
+        # Combine the similarity scores (you might want to adjust weights based on the feature types)
+        total_similarity = numeric_similarity + string_similarity
+        return 1 / (1 + total_similarity)
+
+# Example usage:
+recommender = ContentBasedRecommender(items=['movie1', 'movie2', 'book1', 'book2'])
+
+# Add item profiles with features
+recommender.add_item_profile('movie1', {'genre': 'action', 'rating': 4.5})
+recommender.add_item_profile('movie2', {'genre': 'comedy', 'rating': 3.8})
+recommender.add_item_profile('book1', {'genre': 'mystery', 'rating': 4.2})
+recommender.add_item_profile('book2', {'genre': 'romance', 'rating': 3.9})
+
+# User profile (features based on their preferences)
+user_profile = {'genre': 'action', 'rating': 4.0}
+
+# Recommend top N items to the user
+recommended_items = recommender.recommend_items(user_profile, top_n=3)
+
+# Display the recommended items
+print("Top recommended items:")
+for item_id, similarity_score in recommended_items:
+    print(f"Item ID: {item_id}, Similarity Score: {similarity_score}")
+
